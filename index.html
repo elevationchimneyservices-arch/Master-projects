@@ -38,7 +38,7 @@
 
 <div id="ui">
   <h1>Chimney Venting System — 3D Skeleton</h1>
-  <div class="sub">Crown gas boiler + gas water heater · common masonry chimney · Elevation Chimney Services</div>
+  <div class="sub">Crown gas boiler + gas water heater common-vented · fireplace on its own liner · rebuilding top 6 ft (tree strike) · Elevation Chimney Services</div>
 
   <div class="btns">
     <button id="resetView">Reset view</button>
@@ -52,12 +52,14 @@
   <div class="row"><input type="checkbox" id="tFlue" checked><label for="tFlue">Show flue-gas flow arrows</label></div>
   <div class="row"><input type="checkbox" id="tHouse" checked><label for="tHouse">Floor / wall / joists</label></div>
   <div class="row"><input type="checkbox" id="tFireplace" checked><label for="tFireplace">Fireplace above (measured)</label></div>
+  <div class="row"><input type="checkbox" id="tRoof" checked><label for="tRoof">Roof + rebuilt top 6 ft (tree damage)</label></div>
   <div class="row"><input type="checkbox" id="tRotate"><label for="tRotate">Auto-rotate</label></div>
 
   <div class="legend">
-    <div class="item"><span class="dot n"></span><div><b>Galvanized vent connectors</b> — single-wall, 3" WH + boiler connector</div></div>
-    <div class="item"><span class="dot n"></span><div><b>6" increaser → flex SS liner</b> — water-heater path through chimney</div></div>
-    <div class="item"><span class="dot n"></span><div><b>5" liner</b> — labeled per your description</div></div>
+    <div class="item"><span class="dot n"></span><div><b>Common vent</b> — boiler + water heater join in basement → one shared liner</div></div>
+    <div class="item"><span class="dot n"></span><div><b>6" flex SS liner</b> — shared appliance vent up the chimney</div></div>
+    <div class="item"><span class="dot n"></span><div><b>Fireplace liner</b> — separate, dedicated flue</div></div>
+    <div class="item"><span class="dot warn"></span><div><b>Rebuilt top 6 ft</b> — tree-strike repair above roofline</div></div>
     <div class="item"><span class="dot bad"></span><div><b>Red</b> = likely code problem</div></div>
     <div class="item"><span class="dot warn"></span><div><b>Amber</b> = verify / caution</div></div>
     <div class="item"><span class="dot ok"></span><div><b>Green</b> = looks compliant</div></div>
@@ -130,7 +132,7 @@ const M = {
 
 const root = new THREE.Group(); scene.add(root);
 const groups = { house:new THREE.Group(), chimney:new THREE.Group(), fireplace:new THREE.Group(),
-                 issues:new THREE.Group(), labels:new THREE.Group(), flow:new THREE.Group() };
+                 roof:new THREE.Group(), issues:new THREE.Group(), labels:new THREE.Group(), flow:new THREE.Group() };
 Object.values(groups).forEach(g=>root.add(g));
 
 // ---------- helpers ----------
@@ -210,23 +212,42 @@ const cL=box(wall,CTOP,CD,chimMats,CX-CW/2+wall/2,CTOP/2,CZ,groups.chimney);
 const cR=box(wall,CTOP,CD,chimMats,CX+CW/2-wall/2,CTOP/2,CZ,groups.chimney);
 // chimney crown + cap
 box(CW+0.5,0.4,CD+0.5,M.concrete,CX,CTOP+0.2,CZ,groups.chimney);
-box(0.15,0.9,CD-0.2,M.galv,CX-0.9,CTOP+0.9,CZ,groups.chimney);
-box(0.15,0.9,CD-0.2,M.galv,CX+0.9,CTOP+0.9,CZ,groups.chimney);
 
-// --- Water-heater 6" flexible stainless liner (right flue) ---
-const LINER6_X=CX+0.95, LINER6_BOT=2.4, LINER6_TOP=CTOP+0.6;
-const flex6=flex(0.30,(LINER6_TOP-LINER6_BOT),M.ss,LINER6_X,(LINER6_TOP+LINER6_BOT)/2,CZ,groups.chimney);
-cyl(0.36,0.36,0.7,M.ss,LINER6_X,LINER6_TOP+0.4,CZ,groups.chimney); // rain cap base
-cyl(0.5,0.5,0.12,M.ss,LINER6_X,LINER6_TOP+0.85,CZ,groups.chimney); // cap top
+// --- ROOFLINE + REBUILT TOP 6 ft (tree strike) ---
+const ROOF_Y=CTOP-6.0;               // roof penetration; top 6 ft is rebuilt above it
+const REBUILD_BOT=ROOF_Y;
+// two sloped roof planes meeting at the chimney
+const roofMat=new THREE.MeshStandardMaterial({color:0x3b4654,roughness:0.9,side:THREE.DoubleSide});
+const rpL=new THREE.Mesh(new THREE.PlaneGeometry(16,12),roofMat);
+rpL.position.set(-7.5,ROOF_Y-0.5,CZ+1); rpL.rotation.set(-Math.PI/2.6,0,0.5); groups.roof.add(rpL);
+const rpR=new THREE.Mesh(new THREE.PlaneGeometry(16,12),roofMat);
+rpR.position.set(7.5,ROOF_Y-0.5,CZ+1); rpR.rotation.set(-Math.PI/2.6,0,-0.5); groups.roof.add(rpR);
+// highlight the rebuilt masonry (top 6 ft) — translucent amber shell
+const rebMat=new THREE.MeshStandardMaterial({color:0xe3b341,transparent:true,opacity:0.28,emissive:0x4a3508});
+box(CW+0.18,6.0,CD+0.18,rebMat,CX,REBUILD_BOT+3.0,CZ,groups.roof);
+// flashing band at roof penetration
+box(CW+0.6,0.25,CD+0.6,M.galv,CX,ROOF_Y,CZ,groups.roof);
 
-// --- 5" liner (left flue) per your description (boiler) ---
-const LINER5_X=CX-0.95, LINER5_BOT=2.0, LINER5_TOP=CTOP+0.4;
-cyl(0.21,0.21,(LINER5_TOP-LINER5_BOT),M.liner5,LINER5_X,(LINER5_TOP+LINER5_BOT)/2,CZ,groups.chimney);
-cyl(0.46,0.46,0.12,M.ss,LINER5_X,LINER5_TOP+0.5,CZ,groups.chimney);
+// =========================================================
+//  LINERS  (config CONFIRMED by client)
+//  - Appliances COMMON-VENTED -> one shared 6" flex SS liner
+//  - Fireplace on its OWN separate liner
+// =========================================================
+// Appliance common-vent liner (6" flex stainless) — full height
+const APX=CX-0.95, AP_BOT=2.2, AP_TOP=CTOP+0.6;
+flex(0.30,(AP_TOP-AP_BOT),M.ss,APX,(AP_TOP+AP_BOT)/2,CZ,groups.chimney);
+cyl(0.36,0.36,0.7,M.ss,APX,AP_TOP+0.4,CZ,groups.chimney);   // rain-cap base
+cyl(0.5,0.5,0.12,M.ss,APX,AP_TOP+0.85,CZ,groups.chimney);   // cap top
+cyl(0.34,0.34,0.4,M.ss,APX,AP_BOT-0.2,CZ,groups.chimney);   // bottom tee / cleanout drip-leg
 
-// thimble entries in chimney front wall
-cyl(0.34,0.34,0.7,M.galv,LINER6_X,LINER6_BOT+0.1,CZ+CD/2-0.1,groups.chimney).rotation.x=Math.PI/2;
-cyl(0.27,0.27,0.7,M.galv,LINER5_X,LINER5_BOT+0.1,CZ+CD/2-0.1,groups.chimney).rotation.x=Math.PI/2;
+// Fireplace liner (separate, dedicated) — from smoke chamber up
+const FPX=CX+0.95, FP_BOT=CEIL_Y+3.4, FP_TOP=CTOP+0.45;
+cyl(0.34,0.34,(FP_TOP-FP_BOT),M.liner5,FPX,(FP_TOP+FP_BOT)/2,CZ,groups.chimney);
+cyl(0.52,0.52,0.12,M.ss,FPX,FP_TOP+0.5,CZ,groups.chimney);  // fireplace rain cap
+
+// thimble entry (common vent) in chimney front wall
+const THIMBLE_Y=5.4;
+cyl(0.34,0.34,0.7,M.galv,APX,THIMBLE_Y,CZ+CD/2-0.1,groups.chimney).rotation.x=Math.PI/2;
 
 // =================================================================
 //  GAS WATER HEATER  (right)  3"->increaser->6"
@@ -236,16 +257,15 @@ cyl(WH_R,WH_R,WH_H,M.tank,WH_X,WH_H/2,WH_Z);                 // tank
 cyl(WH_R+0.08,WH_R+0.08,0.25,M.tank,WH_X,WH_H,WH_Z);        // top ring
 // draft hood
 cyl(0.55,0.32,0.5,M.galv,WH_X,WH_H+0.35,WH_Z);
-// 3" connector rises, then tee/increaser, then over to chimney
-const c3=cyl(0.16,0.16,1.5,M.galv,WH_X,WH_H+1.3,WH_Z);      // 3" vertical
-// increaser (3"->6")
-const incr=cyl(0.30,0.16,0.7,M.galv,WH_X,WH_H+2.3,WH_Z);
-// 6" run across to chimney thimble
-const run6=cyl(0.30,0.30,(WH_X-LINER6_X),M.galv,(WH_X+LINER6_X)/2,WH_H+2.65,WH_Z);
-run6.rotation.z=Math.PI/2;
-// elbow down toward thimble height
-cyl(0.30,0.30,(WH_H+2.65)-(LINER6_BOT+0.1),M.galv,LINER6_X,((WH_H+2.65)+(LINER6_BOT+0.1))/2,WH_Z,root);
-cyl(0.30,0.30,(WH_Z-(CZ+CD/2)),M.galv,LINER6_X,LINER6_BOT+0.1,(WH_Z+(CZ+CD/2))/2,root).rotation.x=Math.PI/2;
+// 3" connector rises off draft hood, then increaser to 6"
+cyl(0.16,0.16,0.7,M.galv,WH_X,WH_H+0.9,WH_Z);              // 3" vertical
+cyl(0.30,0.16,0.6,M.galv,WH_X,WH_H+1.45,WH_Z);            // 3"->6" increaser
+// --- COMMON VENT: both connectors merge at a tee, then one pipe into the chimney ---
+const JY=THIMBLE_Y, TEE_X=APX;                            // merge height / x of shared liner
+// 6" run from water heater across to the common tee
+cyl(0.30,0.30,(WH_X-TEE_X),M.galv,(WH_X+TEE_X)/2,JY,WH_Z).rotation.z=Math.PI/2;
+// short rise from increaser up to merge height
+cyl(0.30,0.30,(JY-(WH_H+1.75)),M.galv,WH_X,(JY+(WH_H+1.75))/2,WH_Z);
 
 // =================================================================
 //  CROWN GAS BOILER  (left)
@@ -257,13 +277,15 @@ box(BW*0.5,BH*0.5,0.05,M.tank,B_X,BH*0.5,B_Z+BD/2+0.02);    // jacket/insp panel
 cyl(0.09,0.09,2.2,M.copper,B_X-1.1,1.6,B_Z+1.0).rotation.z=Math.PI/2;
 cyl(0.09,0.09,1.4,M.copper,B_X-1.6,1.6,B_Z+1.0);
 cyl(0.09,0.09,1.2,M.copper,B_X-0.4,2.4,B_Z+1.0);
-// draft hood + galvanized connector up & over to chimney 5" flue
+// draft hood + connector rising to the common merge height
 cyl(0.45,0.26,0.5,M.galv,B_X,BH+0.3,B_Z);
-const bc=cyl(0.22,0.22,1.6,M.galv,B_X,BH+1.35,B_Z);        // vertical
-const brun=cyl(0.22,0.22,(LINER5_X-B_X),M.galv,(B_X+LINER5_X)/2,BH+2.1,B_Z);
-brun.rotation.z=Math.PI/2;
-cyl(0.22,0.22,(BH+2.1)-(LINER5_BOT+0.1),M.galv,LINER5_X,((BH+2.1)+(LINER5_BOT+0.1))/2,B_Z);
-cyl(0.22,0.22,(B_Z-(CZ+CD/2)),M.galv,LINER5_X,LINER5_BOT+0.1,(B_Z+(CZ+CD/2))/2).rotation.x=Math.PI/2;
+cyl(0.24,0.24,(JY-(BH+0.55)),M.galv,B_X,(JY+(BH+0.55))/2,B_Z);          // vertical rise
+// 6" run from boiler across to the common tee (size up at the merge)
+cyl(0.30,0.24,0.5,M.galv,B_X+0.4,JY,B_Z);                               // increaser at merge
+cyl(0.30,0.30,(TEE_X-B_X),M.galv,(B_X+TEE_X)/2,JY,B_Z).rotation.z=Math.PI/2;
+// --- common tee + single pipe back into the chimney thimble & up the shared liner ---
+cyl(0.32,0.32,0.7,M.galv,TEE_X,JY,(B_Z+WH_Z)/2);                        // tee body
+cyl(0.30,0.30,((B_Z+WH_Z)/2-(CZ+CD/2)),M.galv,TEE_X,JY,(((B_Z+WH_Z)/2)+(CZ+CD/2))/2).rotation.x=Math.PI/2;
 
 // =================================================================
 //  FIREPLACE ABOVE (first floor) — modeled from firebox measurements
@@ -291,12 +313,12 @@ smoke.position.set(CX,FP_Y+3.7,CZ+0.6); smoke.rotation.y=Math.PI/4; groups.firep
 // =================================================================
 //  CODE-ISSUE MARKERS  (see docs/venting-analysis.md)
 // =================================================================
-marker(WH_X,WH_H+2.3,WH_Z,'bad');                      // 3"->6" oversize increaser
-marker(LINER6_X,(LINER6_TOP+LINER6_BOT)/2-3,CZ,'bad'); // oversized 6" liner for single WH
-marker((WH_X+LINER6_X)/2,WH_H+2.65,WH_Z,'warn');       // connector slope/rise
-marker((B_X+LINER5_X)/2,BH+2.1,B_Z,'warn');            // boiler connector slope/clearance
+marker(APX,(AP_TOP+AP_BOT)/2-2,CZ,'warn');             // verify 6" sized for COMBINED input
+marker((WH_X+TEE_X)/2,JY,WH_Z,'warn');                 // connector slope/rise ≥1/4"/ft
+marker(TEE_X,JY,(B_Z+WH_Z)/2,'warn');                  // common-vent tee: smaller enters above larger
 marker(B_X,BH+1.0,B_Z+0.6,'warn');                     // single-wall clearance to joists
-marker(LINER5_X,LINER5_BOT+0.4,CZ+CD/2,'warn');        // common-vent vs separate liner question
+marker(CX,REBUILD_BOT+3.0,CZ+CD/2,'bad');              // rebuilt top 6 ft + 3-2-10 + liner extension
+marker(WH_X,WH_H+1.45,WH_Z,'warn');                    // 3"->6" increaser at appliance
 
 // =================================================================
 //  LABELS
@@ -304,25 +326,24 @@ marker(LINER5_X,LINER5_BOT+0.4,CZ+CD/2,'warn');        // common-vent vs separat
 label('Crown gas boiler (hydronic)', B_X, BH+0.2, B_Z+1.6,'n');
 label('Gas water heater', WH_X, 2.4, WH_Z+1.4,'n');
 label('Draft hood', WH_X+0.1, WH_H+0.4, WH_Z+1.0,'n');
-label('3" galvanized connector', WH_X+0.2, WH_H+1.4, WH_Z+1.0,'n');
-label('3"→6" increaser  ⚠ oversize', WH_X+1.6, WH_H+2.3, WH_Z,'bad');
-label('6" flexible SS liner (water heater)', LINER6_X+2.6, (LINER6_TOP+LINER6_BOT)/2+1, CZ,'bad');
-label('5" liner (per your notes)', LINER5_X-3.0, (LINER5_TOP+LINER5_BOT)/2+2, CZ,'n');
-label('Masonry chimney', CX-2.2, CTOP-1.5, CZ,'n');
-label('Boiler vent connector', B_X-0.4, BH+2.6, B_Z,'warn');
+label('3"→6" increaser', WH_X+1.4, WH_H+1.45, WH_Z,'warn');
+label('COMMON VENT tee (both appliances merge)', TEE_X, JY+0.9, WH_Z+0.6,'n');
+label('6" flex SS liner — shared (size for COMBINED input)', APX-3.4, (AP_TOP+AP_BOT)/2-1, CZ,'warn');
+label('Fireplace liner — separate / dedicated ✔', FPX+3.2, (FP_TOP+FP_BOT)/2, CZ,'ok');
+label('Masonry chimney', CX-2.4, ROOF_Y-2.0, CZ,'n');
+label('Rebuilt top 6 ft (tree strike) — extend liners + new crown/cap', CX, CTOP-1.5, CZ+2.4,'bad');
+label('Roofline — keep 3-2-10 rule', 6.0, ROOF_Y+0.3, CZ+2,'warn');
 label('Fireplace — firebox ~47"w x 30"h x 18"d', CX, FP_Y+OPEN_H+1.3, CZ+2.6,'n');
-label('Gray-green tile surround + hearth', CX-3.4, FP_Y+0.6, CZ+3.2,'n');
 label('Connector clearance to wood joists?', B_X+0.5, BH+1.0, B_Z+1.6,'warn');
-label('Common vent vs. 2 separate liners?', LINER5_X-1.0, LINER5_BOT+1.4, CZ+1.8,'warn');
 
 // =================================================================
 //  FLUE-GAS FLOW ARROWS
 // =================================================================
-arrow(WH_X,WH_H+0.9,WH_Z,1.2,0xf0a000);
-arrow(LINER6_X,LINER6_BOT+2,CZ,3,0xf0a000);
-arrow(LINER6_X,LINER6_BOT+8,CZ,3,0xf0a000);
-arrow(B_X,BH+0.9,B_Z,1.2,0xf0a000);
-arrow(LINER5_X,LINER5_BOT+3,CZ,3,0xf0a000);
+arrow(WH_X,WH_H+0.9,WH_Z,1.0,0xf0a000);                 // up off water heater
+arrow(B_X,BH+0.9,B_Z,1.0,0xf0a000);                     // up off boiler
+arrow(APX,AP_BOT+2,CZ,3,0xf0a000);                      // up the shared common liner
+arrow(APX,AP_BOT+7,CZ,3,0xf0a000);
+arrow(APX,AP_BOT+12,CZ,3,0xf0a000);
 
 // =================================================================
 //  UI WIRING
@@ -335,6 +356,7 @@ $('tIssues').onchange=e=>groups.issues.visible=e.target.checked;
 $('tFlue').onchange=e=>groups.flow.visible=e.target.checked;
 $('tHouse').onchange=e=>groups.house.visible=e.target.checked;
 $('tFireplace').onchange=e=>groups.fireplace.visible=e.target.checked;
+$('tRoof').onchange=e=>groups.roof.visible=e.target.checked;
 let rotate=false; $('tRotate').onchange=e=>rotate=e.target.checked;
 function setView(p){ camera.position.copy(p); controls.target.set(0,5.5,0); }
 $('resetView').onclick=()=>setView(HOME);

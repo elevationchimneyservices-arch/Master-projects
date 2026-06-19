@@ -19,9 +19,11 @@ It loads Three.js from a CDN, so the viewing machine needs internet access the f
 
 ## Status / open questions
 
-- ❓ **Common vent vs. two separate liners?** Your description says both — confirm which.
-- ❓ **Appliance model numbers / input BTU/hr** — needed to finalize liner sizing.
-- 🔴 The **6" liner looks oversized** for a single water heater (see the analysis).
-- 🟢 Fireplace firebox now modeled from your tape measurements (~47" opening, gray-green tile).
+- ✅ **Common vent confirmed** — boiler + water heater merge in the basement into one shared 6" liner.
+- ✅ **Fireplace = its own dedicated liner** (correct).
+- ✅ **Tree strike** — top ~6 ft above the roofline is being rebuilt (modeled + reviewed; see §3b).
+- ❓ **Appliance model numbers / input BTU/hr** — still needed to finalize the **common-vent** sizing
+  (confirm whether the shared 6" is correct, oversized, or undersized for the combined load).
+- 🟢 Fireplace firebox modeled from your tape measurements (~47" opening, gray-green tile).
 
 > Informational only — not a substitute for an on-site inspection with draft/combustion testing.
