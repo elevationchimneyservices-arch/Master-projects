@@ -1,0 +1,11 @@
+{
+  "scans": [
+    {
+      "file": "polycam-fireplace-room.glb",
+      "label": "Fireplace room (Polycam Spaces) — 2026-06-19",
+      "type": "Spaces / room-segmentation",
+      "useful_for": "Fireplace surround footprint (~5.8 ft wide). NOT the venting run.",
+      "notes": "Upstairs living room. Wrong mode for venting analysis."
+    }
+  ]
+}
