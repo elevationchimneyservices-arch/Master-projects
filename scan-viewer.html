@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Polycam Scan Viewer — Fireplace Room</title>
+<style>
+  :root{--bg:#0e1116;--panel:#171c24;--line:#2a323d;--txt:#e6edf3;--muted:#9aa7b4;--accent:#58a6ff;}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  #app{position:fixed;inset:0}
+  #ui{position:fixed;top:12px;left:12px;width:300px;background:rgba(23,28,36,.92);
+    border:1px solid var(--line);border-radius:12px;padding:14px 16px;backdrop-filter:blur(6px);z-index:10}
+  h1{font-size:15px;margin:0 0 2px}.sub{font-size:11px;color:var(--muted);margin-bottom:10px}
+  .row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+  .row label{flex:1;cursor:pointer}
+  input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+  button{background:#21262d;color:var(--txt);border:1px solid var(--line);border-radius:8px;
+    padding:7px 9px;font-size:12px;cursor:pointer}button:hover{border-color:var(--accent)}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  .hint{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.4}
+  a{color:var(--accent);text-decoration:none}
+  #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+    text-align:center;padding:40px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="ui">
+  <h1>Polycam Scan — Fireplace Room</h1>
+  <div class="sub">6_19_2026 · room-segmentation capture (Spaces)</div>
+  <div class="btns"><button id="reset">Reset view</button><button id="top">Top</button></div>
+  <div class="row"><input type="checkbox" id="wire"><label for="wire">Wireframe</label></div>
+  <div class="row"><input type="checkbox" id="rot"><label for="rot">Auto-rotate</label></div>
+  <div class="row"><input type="checkbox" id="grid" checked><label for="grid">Floor grid (1 ft)</label></div>
+  <div class="hint">Drag to orbit · scroll to zoom. This is the upstairs living room with the
+  fireplace (~5.8 ft wide surround). It does <b>not</b> contain the basement venting — see
+  <a href="docs/venting-analysis.md">the analysis</a> for the rescan I need. Back to the
+  <a href="index.html">venting model</a>.</div>
+</div>
+<div id="err">Could not load the scan file.<br>Make sure <code>assets/scan/polycam-fireplace-room.glb</code> exists and you're opening this over http (not file://).</div>
+
+<script type="importmap">
+{ "imports": {
+  "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0e1116);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.01,1000);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.getElementById('app').appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true;
+
+scene.add(new THREE.HemisphereLight(0xcfe0f5,0x202020,1.0));
+const d=new THREE.DirectionalLight(0xffffff,1.4); d.position.set(5,10,7); scene.add(d);
+
+const grid=new THREE.GridHelper(60,60,0x2a323d,0x1b2027); scene.add(grid);
+
+let model=null, HOME=new THREE.Vector3();
+const loader=new GLTFLoader();
+loader.load('assets/scan/polycam-fireplace-room.glb', gltf=>{
+  model=gltf.scene;
+  // center + frame
+  const box=new THREE.Box3().setFromObject(model);
+  const size=box.getSize(new THREE.Vector3()), c=box.getCenter(new THREE.Vector3());
+  model.position.sub(c); model.position.y -= box.min.y - c.y; // sit on grid
+  scene.add(model);
+  const r=Math.max(size.x,size.y,size.z);
+  HOME.set(r*0.9,r*0.7,r*0.9); camera.position.copy(HOME);
+  controls.target.set(0,size.y*0.4,0); controls.update();
+}, undefined, err=>{ document.getElementById('err').style.display='flex'; console.error(err); });
+
+const $=id=>document.getElementById(id);
+$('reset').onclick=()=>{camera.position.copy(HOME);controls.target.set(0,1,0);};
+$('top').onclick=()=>{const r=HOME.length();camera.position.set(0.01,r,0.01);controls.target.set(0,0,0);};
+$('grid').onchange=e=>grid.visible=e.target.checked;
+let rot=false; $('rot').onchange=e=>rot=e.target.checked;
+$('wire').onchange=e=>{ if(model) model.traverse(o=>{ if(o.isMesh){ o.material.wireframe=e.target.checked; }}); };
+
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);});
+(function loop(){requestAnimationFrame(loop); if(rot&&model)model.rotation.y+=0.003;
+  controls.update(); renderer.render(scene,camera);})();
+</script>
+</body>
+</html>

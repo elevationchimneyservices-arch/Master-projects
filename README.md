@@ -8,14 +8,23 @@ Services** during a chimney rebuild.
 
 | Path | What it is |
 |------|------------|
-| [`index.html`](index.html) | **Interactive 3D model** (Three.js). Open in any modern browser — drag to orbit, scroll to zoom. Toggles for chimney cutaway, labels, code-issue markers, flue-gas flow, and the fireplace. |
+| [`index.html`](index.html) | **Interactive 3D model** (Three.js). Open in any modern browser — drag to orbit, scroll to zoom. Toggles for chimney cutaway, labels, code-issue markers, flue-gas flow, fireplace, and the rebuilt top. |
+| [`scan-viewer.html`](scan-viewer.html) | **Polycam scan viewer** — loads the uploaded room scan (`assets/scan/`). Serve over http (see below). |
 | [`docs/venting-analysis.md`](docs/venting-analysis.md) | **Full code-review write-up** — appliance ID, NFPA 54 / IFGC venting findings, firebox measurements, and what to verify. |
 | `assets/reference/` | The field photos the model and review are based on. |
+| `assets/scan/` | The Polycam GLB scan of the fireplace room. |
 
 ## How to view the 3D model
 
 Just open `index.html` in a browser (double-click it, or serve the folder).
 It loads Three.js from a CDN, so the viewing machine needs internet access the first time.
+
+### Viewing the Polycam scan
+`scan-viewer.html` loads a `.glb`, which browsers block over `file://`. Serve the folder first:
+```
+cd Master-projects && python3 -m http.server 8000
+# then open http://localhost:8000/scan-viewer.html
+```
 
 ## Status / open questions
 

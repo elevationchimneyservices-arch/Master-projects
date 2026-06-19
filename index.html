@@ -293,10 +293,10 @@ cyl(0.30,0.30,((B_Z+WH_Z)/2-(CZ+CD/2)),M.galv,TEE_X,JY,(((B_Z+WH_Z)/2)+(CZ+CD/2)
 // =================================================================
 const FP_Y=CEIL_Y+0.6;
 const OPEN_W=3.95, OPEN_H=2.5, OPEN_D=1.5;   // ~47"w x 30"h x 18"d firebox
-// tiled face / surround (gray-green tile per photo 06)
-box(6.4,4.2,0.6,M.tile,CX,FP_Y+2.1,CZ+1.4,groups.fireplace);
-// raised tiled hearth extending into room
-box(6.4,0.45,2.6,M.tile,CX,FP_Y+0.22,CZ+2.9,groups.fireplace);
+// tiled face / surround (gray-green tile per photo 06; ~5.8 ft wide per Polycam scan)
+box(5.8,4.2,0.6,M.tile,CX,FP_Y+2.1,CZ+1.4,groups.fireplace);
+// raised tiled hearth extending into room (~2.7 ft deep per scan)
+box(5.8,0.45,2.7,M.tile,CX,FP_Y+0.22,CZ+2.9,groups.fireplace);
 // firebox cavity (sooted firebrick: back + sides + floor)
 box(OPEN_W,OPEN_H,0.4,M.firebrick,CX,FP_Y+0.6+OPEN_H/2,CZ+1.4-OPEN_D,groups.fireplace);          // back
 box(0.4,OPEN_H,OPEN_D,M.firebrick,CX-OPEN_W/2,FP_Y+0.6+OPEN_H/2,CZ+1.4-OPEN_D/2,groups.fireplace);// L side

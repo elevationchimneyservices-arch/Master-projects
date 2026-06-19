@@ -197,10 +197,26 @@ fireplace** directly above (photos 06–10). Approximate field measurements from
 - **Flue-gas flow arrows**, **labels**, and **pulsing markers** at each item from §3 / §3b.
 - Toggles for cutaway, labels, issues, flow, joists/walls, fireplace, **roof/rebuild**, and auto-rotate.
 
-### Next info that would sharpen the model
+### About the Polycam scan you sent (`assets/scan/`)
+The uploaded `.glb` is a Polycam **"Spaces"** capture — an AI room-segmentation of the **upstairs
+living room with the fireplace** (89 walls, 12 windows, doors, stairs, a chair, one `fireplace`
+object). View it with `scan-viewer.html`.
+
+- ✅ **Useful:** it confirms the **fireplace surround ≈ 5.8 ft wide × ~2.7 ft deep** (I updated the
+  model to match).
+- ⚠️ **But it's the wrong capture for the venting:** Spaces produces tidy room geometry, **not** the
+  basement, the boiler/water heater, the connectors, or the chimney's vertical run. So it can't give
+  me the lateral run or total chimney height.
+
+**To make the venting model dimensionally exact, rescan in Polycam using one of these instead of
+"Spaces":**
+- **LiDAR → "Room" or "Object" mode** (not Spaces), or **Photo mode**, capturing the **basement**:
+  walk the full path *water heater → 3" → increaser → tee → boiler connector → chimney thimble*, then
+  pan up the chimney.
+- Export that as **GLTF/GLB** (or OBJ) — that mesh *will* contain the real connector run + heights.
+
+### Still needed to finalize the venting verdict
 1. Both appliance **rating plates** (model + input BTU/hr) — unlocks exact **common-vent** sizing.
-2. A wide shot showing the **total chimney height** and the **lateral run** of the connectors.
-3. The **top of the chimney** (existing crown/caps) and a look down/camera-scan of both flues.
-4. A tape on the **boiler** connector diameter and the **chimney lateral run length**.
-5. A **Polycam / LiDAR scan** (`.glb`/`.obj`) of the basement run + chimney — makes this model
-   dimensionally exact (see README).
+2. **Total chimney height** + **lateral run** of the connectors (basement rescan above, or tape).
+3. The **top of the chimney** (existing crown/caps) and a camera-scan down both flues.
+4. Tape on the **boiler** connector diameter.
